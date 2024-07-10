@@ -16,12 +16,8 @@ void log_operation(const char *operation, const char *name, uint32_t salary) {
     gettimeofday(&tv, NULL);
     long long milliseconds_since_epoch = (long long)(tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
 
-    if (strcmp(operation, "INSERT") == 0) {
+    if (strcmp(operation, "INSERT") == 0 || strcmp(operation, "DELETE") == 0 || strcmp(operation, "SEARCH") == 0 || strcmp(operation, "PRINT") == 0) {
         fprintf(output_file, "%lld,%s,%s,%u\n", milliseconds_since_epoch, operation, name, salary);
-    } else if (strcmp(operation, "DELETE") == 0) {
-        fprintf(output_file, "%lld,%s,%s\n", milliseconds_since_epoch, operation, name);
-    } else if (strcmp(operation, "SEARCH") == 0) {
-        fprintf(output_file, "%lld,%s,%s\n", milliseconds_since_epoch, operation, name);
     }
 }
 
