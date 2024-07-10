@@ -39,6 +39,9 @@ int main() {
     int num_commands;
     fscanf(command_file, "threads,%d,0\n", &num_commands);
 
+    // Log the number of threads at the beginning
+    fprintf(output_file, "Running %d threads\n", num_commands);
+
     pthread_t threads[num_commands];
     Command commands[num_commands];
 
