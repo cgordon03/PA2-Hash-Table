@@ -8,9 +8,6 @@
 #include "hash_table.h"
 #include "logging.h"
 
-#define COMMAND_FILE "commands.txt"
-#define OUTPUT_FILE "output.txt"
-
 void *execute_command(void *arg);
 
 typedef struct {
@@ -22,16 +19,18 @@ typedef struct {
 
 pthread_rwlock_t rwlock;
 HashTable *hash_table;
+
+FILE *command_file;
 FILE *output_file;
 
 int main() {
-    FILE *command_file = fopen(COMMAND_FILE, "r");
+    command_file = fopen("commands.txt", "r");
     if (!command_file) {
         perror("Failed to open command file");
         return 1;
     }
 
-    output_file = fopen(OUTPUT_FILE, "w");
+    output_file = fopen("output.txt", "w");
     if (!output_file) {
         perror("Failed to open output file");
         return 1;
@@ -66,7 +65,9 @@ int main() {
 }
 
 void *execute_command(void *arg) {
+
     Command *command = (Command *)arg;
+
     struct timeval tv;
     gettimeofday(&tv, NULL);
     long long milliseconds_since_epoch = (long long)(tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
@@ -78,14 +79,18 @@ void *execute_command(void *arg) {
         insert(hash_table, command->name, command->salary);
         log_lock("WRITE LOCK RELEASED", milliseconds_since_epoch);
         pthread_rwlock_unlock(&rwlock);
-    } else if (strcmp(command->command, "delete") == 0) {
+    } 
+    
+    else if (strcmp(command->command, "delete") == 0) {
         log_operation("DELETE", command->name, 0);  // Log operation first
         pthread_rwlock_wrlock(&rwlock);
         log_lock("WRITE LOCK ACQUIRED", milliseconds_since_epoch);
         delete(hash_table, command->name);
         log_lock("WRITE LOCK RELEASED", milliseconds_since_epoch);
         pthread_rwlock_unlock(&rwlock);
-    } else if (strcmp(command->command, "search") == 0) {
+    } 
+    
+    else if (strcmp(command->command, "search") == 0) {
         log_operation("SEARCH", command->name, 0);  // Log operation first
         pthread_rwlock_rdlock(&rwlock);
         log_lock("READ LOCK ACQUIRED", milliseconds_since_epoch);
@@ -97,7 +102,9 @@ void *execute_command(void *arg) {
         }
         log_lock("READ LOCK RELEASED", milliseconds_since_epoch);
         pthread_rwlock_unlock(&rwlock);
-    } else if (strcmp(command->command, "print") == 0) {
+    } 
+    
+    else if (strcmp(command->command, "print") == 0) {
         log_operation("PRINT", "0", 0);  // Log operation first
         pthread_rwlock_rdlock(&rwlock);
         log_lock("READ LOCK ACQUIRED", milliseconds_since_epoch);
@@ -105,5 +112,6 @@ void *execute_command(void *arg) {
         log_lock("READ LOCK RELEASED", milliseconds_since_epoch);
         pthread_rwlock_unlock(&rwlock);
     }
+    
     return NULL;
 }

@@ -1,4 +1,4 @@
-This folder is a bunch of code from ChatGpt. It doesn't really work
+Written by Clayton Gordon with the use of AI
 
 # PA2-Hash-Table
 
