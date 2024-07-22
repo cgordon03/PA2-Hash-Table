@@ -6,7 +6,10 @@
 #include <string.h>
 #include <pthread.h>
 #include <stdint.h>
-#include "hashTable.c"
+#include "hashTable.h"
+
+int numLocks = 0;
+int numReleases = 0;
 
 //ChatGPT generated
 //Separates the information from input file

@@ -1,6 +1,10 @@
 //Amoy Marshalleck
 //July 9, 2024
 //Operating Systems - John Aedo
+
+#ifndef HASHTABLE_H
+#define HASHTABLE_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,8 +32,10 @@ FILE *outputFile; //output text file
 hashRecord *hashTable; //hash record table head
 command_var *commandArray; //input commands array
 pthread_rwlock_t rwlock; //the lock
-int numLocks = 0;
-int numReleases = 0;
+/*extern int numLocks = 0;
+extern int numReleases = 0;*/
+
+long long current_timestamp(void);
 
 // Jenkins One-at-a-Time hash function
 uint32_t jenkins_one_at_a_time_hash(const char *key);
@@ -42,3 +48,4 @@ void del(command_var commandLine);
 void print();
 uint32_t search(command_var commandLine);
 
+#endif
