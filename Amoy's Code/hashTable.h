@@ -1,4 +1,3 @@
-//Amoy Marshalleck
 //July 9, 2024
 //Operating Systems - John Aedo
 
