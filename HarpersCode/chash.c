@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <time.h>
 #include "hash_table.h"
+#include "locks.h"
 #include "sys/time.h"
 
 #define MAX_LINE_LENGTH 100
@@ -38,7 +39,7 @@ int main() {
     int recordNum =0;
 
     struct htable hash_table = *make_table();
-    pthread_rwlock_t lock;
+    pthread_rwlock_t lock = PTHREAD_RWLOCK_INITIALIZER;
 
     //Gets the number of threads from the first line of the file
     if (fgets(line, sizeof(line), file)){
@@ -46,12 +47,8 @@ int main() {
     }
     fprintf(output,"Running %d threads\n", recordNum);
 
-    //Allocates memory for array of records
-    printf("%d", recordNum);
-    //Record *records = malloc(recordNum * sizeof(Record));
+    //Reads all of the commands from the file and stores in array
     Record records[recordNum];
-
-    //Reads all of the commands from the file
     while (fgets(line, sizeof(line), file)) {
         line[strcspn(line, "\n")] = '\0'; // Remove newline character
         parse_line(line, &records[count]);
@@ -60,71 +57,87 @@ int main() {
 
     fclose(file);
 
-    long long time = 0;
+    int lock_acq = 0, lock_rel = 0;
+    int peopleCount = 0;
 
     for (int i = 0; i < count; i++) {
  
+        //Executes insert operation
         if(strcmp("insert", records[i].action) == 0){
+            write_lock(lock, output, lock_acq);
+            lock_acq++;
+
             uint32_t hash = jenkins_one_at_a_time_hash(records[i].name);
-            fprintf(output,"INSERT, %u, %s, %d\n", hash, records[i].name, records[i].number);
-            pthread_rwlock_wrlock(&lock);
-            time = current_timestamp();
-
-            fprintf(output, "%lld, WRITE LOCK ACQUIRED\n", time);
+            long long time = current_timestamp();
+            fprintf(output,"%lld: INSERT, %u, %s, %d\n", time, hash, records[i].name, records[i].number);
             insert(&hash_table, records[i].name, records[i].number);
+            peopleCount++;
 
-            time = current_timestamp();
-            fprintf(output, "%lld, WRITE LOCK RELEASED\n", time);
-            pthread_rwlock_unlock(&lock);
+            write_unlock(lock, output, lock_rel);
+            lock_rel++;
         }
+
+        //Executes print operation
         else if (strcmp("print", records[i].action) == 0){
-            pthread_rwlock_rdlock(&lock);
-            time = current_timestamp();
-            fprintf(output, "%lld, READ LOCK ACQUIRED\n", time);
-
+            read_lock(lock, output, lock_acq);
+            lock_acq++;
             print(&hash_table, output);
-
-            time = current_timestamp();
-            fprintf(output, "%lld, READ LOCK RELEASED\n", time);
-            pthread_rwlock_unlock(&lock);
+            read_unlock(lock, output, lock_rel);
+            lock_rel++;
         }
+
+        //Executes search operation
         else if (strcmp("search", records[i].action) == 0){
-            pthread_rwlock_rdlock(&lock);
-            time = current_timestamp();
-            fprintf(output, "%lld, READ LOCK ACQUIRED\n", time);
+            read_lock(lock, output, lock_acq);
+            lock_acq++;
 
             fprintf(output,"SEARCH, %s\n", records[i].name);
-            struct hash_struct searchNode = search(&hash_table, records[i].name);
-            if (strcmp(searchNode.name,records[i].name) == 0){
+            int searchNum = in_table(&hash_table, records[i].name);
+            if(searchNum){
+                struct hash_struct searchNode = search(&hash_table, records[i].name);
                 u_int32_t hash = jenkins_one_at_a_time_hash(searchNode.name);
-                fprintf(output,"%u, %s, %u\n", hash, searchNode.name, searchNode.salary);
+                long long time = current_timestamp();
+                fprintf(output,"%lld: %u, %s, %u\n", time, hash, searchNode.name, searchNode.salary);
             }
             else{
-                fprintf(output, "Person not found");
+                long long time = current_timestamp();
+                fprintf(output, "%lld: NOT FOUND\n", time);
             }
 
-            time = current_timestamp();
-            fprintf(output, "%lld, READ LOCK RELEASED\n", time);
-            pthread_rwlock_unlock(&lock);
+            read_unlock(lock, output, lock_rel);
+            lock_rel++;
         }
+
+        //Executes delete operation
         else if (strcmp("delete", records[i].action) == 0){
-            pthread_rwlock_wrlock(&lock);
-            time = current_timestamp();
-            fprintf(output, "%lld, WRITE LOCK ACQUIRED\n", time);
+            write_lock(lock, output, lock_rel);
+            lock_acq++;
 
+            long long time = current_timestamp();
+            fprintf(output, "%lld: DELETE AWAKENED\n", time);
             delete(&hash_table, records[i].name);
-            fprintf(output,"DELETE, %s\n", records[i].name);
-
             time = current_timestamp();
-            fprintf(output, "%lld, WRITE LOCK RELEASED\n", time);
-            pthread_rwlock_unlock(&lock);
+            fprintf(output,"%lld: DELETE, %s\n", time, records[i].name);
+            peopleCount--;
+
+            write_unlock(lock, output, lock_rel);
+            lock_rel++;
         }
     }
+
+    fprintf(output, "Finished all threads\n");
+    fprintf(output, "Number of lock acquisitions: %d\n", lock_acq);
+    fprintf(output, "Number of lock releases: %d\n", lock_rel);
+
+    read_lock(lock, output, lock_acq);
+    sorted_print (&hash_table, output, peopleCount);
+    read_unlock(lock, output, lock_rel);
 
     fclose(output);
     return 0;
 }
 
+//Gets the number of theads from the input file
 int get_thread_num(char *line) {
     
     int threadNum = 0;
@@ -157,13 +170,6 @@ void parse_line(char *line, Record *record) {
         record->number = atoi(token);
     }
 
-}
-
-long long current_timestamp() {
-  struct timeval te;
-  gettimeofday(&te, NULL); // get current time
-  long long microseconds = (te.tv_sec * 1000000) + te.tv_usec; // calculate milliseconds
-  return microseconds;
 }
 
 
