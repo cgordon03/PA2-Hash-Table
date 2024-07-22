@@ -28,10 +28,12 @@ typedef struct {
     uint32_t number;
 } command_var;
 
-FILE *outputFile; //output text file
-hashRecord *hashTable; //hash record table head
-command_var *commandArray; //input commands array
-pthread_rwlock_t rwlock; //the lock
+extern FILE *outputFile; //output text file
+extern hashRecord *hashTable; //hash record table head
+extern command_var *commandArray; //input commands array
+extern pthread_rwlock_t rwlock; //the lock
+
+
 /*extern int numLocks = 0;
 extern int numReleases = 0;*/
 

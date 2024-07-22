@@ -8,8 +8,13 @@
 #include <stdint.h>
 #include "hashTable.h"
 
-int numLocks = 0;
-int numReleases = 0;
+int numLocks = 1;
+int numReleases = 1;
+
+FILE *outputFile; //output text file
+hashRecord *hashTable; //hash record table head
+command_var *commandArray; //input commands array
+pthread_rwlock_t rwlock; //the lock
 
 //ChatGPT generated
 //Separates the information from input file
