@@ -4,34 +4,30 @@
 #include "sys/time.h"
 
 //Acquires read lock
-void read_lock(pthread_rwlock_t lock, FILE *output, int lock_acq){
+void read_lock(pthread_rwlock_t lock, FILE *output){
     pthread_rwlock_rdlock(&lock);
     long long time = current_timestamp();
     fprintf(output, "%lld: READ LOCK ACQUIRED\n", time);
-    lock_acq++;
 }
 //Releases read lock
-void read_unlock(pthread_rwlock_t lock, FILE *output, int lock_rel){
+void read_unlock(pthread_rwlock_t lock, FILE *output){
     pthread_rwlock_unlock(&lock);
     long long time = current_timestamp();
     fprintf(output, "%lld: READ LOCK RELEASED\n", time);
-    lock_rel++;
 }
 
 //Acquires write lock
-void write_lock(pthread_rwlock_t lock, FILE *output, int lock_acq){
+void write_lock(pthread_rwlock_t lock, FILE *output){
     pthread_rwlock_wrlock(&lock);
     long long time = current_timestamp();
     fprintf(output, "%lld: WRITE LOCK ACQUIRED\n", time);
-    lock_acq++;
 }
 
 //Releases write lock
-void write_unlock(pthread_rwlock_t lock, FILE *output, int lock_rel){
+void write_unlock(pthread_rwlock_t lock, FILE *output){
     pthread_rwlock_unlock(&lock); 
     long long time = current_timestamp();
     fprintf(output, "%lld: WRITE LOCK RELEASED\n", time);
-    lock_rel++;
 }
 
 //Returns current timestamp

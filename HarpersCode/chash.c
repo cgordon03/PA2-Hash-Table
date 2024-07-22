@@ -64,7 +64,7 @@ int main() {
  
         //Executes insert operation
         if(strcmp("insert", records[i].action) == 0){
-            write_lock(lock, output, lock_acq);
+            write_lock(lock, output);
             lock_acq++;
 
             uint32_t hash = jenkins_one_at_a_time_hash(records[i].name);
@@ -73,22 +73,22 @@ int main() {
             insert(&hash_table, records[i].name, records[i].number);
             peopleCount++;
 
-            write_unlock(lock, output, lock_rel);
+            write_unlock(lock, output);
             lock_rel++;
         }
 
         //Executes print operation
         else if (strcmp("print", records[i].action) == 0){
-            read_lock(lock, output, lock_acq);
+            read_lock(lock, output);
             lock_acq++;
             print(&hash_table, output);
-            read_unlock(lock, output, lock_rel);
+            read_unlock(lock, output);
             lock_rel++;
         }
 
         //Executes search operation
         else if (strcmp("search", records[i].action) == 0){
-            read_lock(lock, output, lock_acq);
+            read_lock(lock, output);
             lock_acq++;
 
             fprintf(output,"SEARCH, %s\n", records[i].name);
@@ -104,13 +104,13 @@ int main() {
                 fprintf(output, "%lld: NOT FOUND\n", time);
             }
 
-            read_unlock(lock, output, lock_rel);
+            read_unlock(lock, output);
             lock_rel++;
         }
 
         //Executes delete operation
         else if (strcmp("delete", records[i].action) == 0){
-            write_lock(lock, output, lock_rel);
+            write_lock(lock, output);
             lock_acq++;
 
             long long time = current_timestamp();
@@ -120,7 +120,7 @@ int main() {
             fprintf(output,"%lld: DELETE, %s\n", time, records[i].name);
             peopleCount--;
 
-            write_unlock(lock, output, lock_rel);
+            write_unlock(lock, output);
             lock_rel++;
         }
     }
@@ -129,9 +129,9 @@ int main() {
     fprintf(output, "Number of lock acquisitions: %d\n", lock_acq);
     fprintf(output, "Number of lock releases: %d\n", lock_rel);
 
-    read_lock(lock, output, lock_acq);
+    read_lock(lock, output);
     sorted_print (&hash_table, output, peopleCount);
-    read_unlock(lock, output, lock_rel);
+    read_unlock(lock, output);
 
     fclose(output);
     return 0;
